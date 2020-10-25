@@ -5,7 +5,9 @@ While online the bot will automatically remove banned words and ban the users wh
 
 **g!removeword:** Remove a word from the list of banned words.
 
-**g!responsechannel:** Set the channel for ban responses.\n **g!listwords:** List the banned words.
+**g!responsechannel:** Set the channel for ban responses.
+
+**g!listwords:** List the banned words.
 
 **g!prefix:** Change the bot prefix.
 
