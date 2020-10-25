@@ -110,7 +110,7 @@ async def remove_word(ctx, *, newWord):
     for word in bannedWords:
         if newWord == word: 
             bannedWords.remove(word)   
-            await ctx.send(embed=discord.Embed(title="Word Removed", description=("The word was successfully removed to the list of banned word.")))
+            await ctx.send(embed=discord.Embed(title="Word Removed", description=("The word was successfully removed from the list of banned word.")))
             return
         
     await ctx.send(embed=discord.Embed(title="Cannot Find Word", description=("This word could not be found in the list of banned words.")))
