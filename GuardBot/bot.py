@@ -14,13 +14,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-intents = discord.Intents(messages=True, guilds=True, members=True)
-
 TOKEN = os.getenv('DISCORD_TOKEN')
-
-
+intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix='g!', intents=intents)
+bot.remove_command('help')
 
 bannedWords = []
 file = open("Banned-Words.txt", "r")
@@ -30,6 +27,7 @@ for word in file:
 file.close()
 
 responseChannel = None
+punishMode = "ban"
 
 def check(author):
     def predicate(ctx): 
@@ -51,10 +49,16 @@ def is_admin():
 async def banUserForMessage(message):
     user = message.author
     guild = message.channel.guild
-    #await guild.ban(user, reason="Offensive Language")
-    await user.send(embed=discord.Embed(title="Banned", description=("You have been banned from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explaination within 5 minutes.".format(guild=message.channel.guild.name, message = message.content))))
-    response = await bot.wait_for('message', check=check, timeout=300)
-    await responseChannel.send(embed=discord.Embed(title="Banned User Response", description = "Banned user {user} has given this explaination for why their ban was invalid: {response}".format(user=user, response=response.content)))
+    if punishMode == "ban":
+        #await guild.ban(user, reason="Offensive Language")
+        await user.send(embed=discord.Embed(title="Banned", description=("You have been banned from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explaination within 5 minutes.".format(guild=message.channel.guild.name, message = message.content))))
+        response = await bot.wait_for('message', check=check, timeout=300)
+        await responseChannel.send(embed=discord.Embed(title="Banned User Response", description = "Banned user {user} has given this explaination for why their ban was invalid: {response}".format(user=user, response=response.content)))
+    elif punishMode == "kick":
+        #await guild.kick(user, reason="Offensive Language")
+        await user.send(embed=discord.Embed(title="Kicked", description=("You have been kicked from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explaination within 5 minutes.".format(guild=message.channel.guild.name, message = message.content))))
+        response = await bot.wait_for('message', check=check, timeout=300)
+        await responseChannel.send(embed=discord.Embed(title="Kicked User Response", description = "Banned user {user} has given this explaination for why their kick was invalid: {response}".format(user=user, response=response.content)))
     
 @bot.event
 async def on_ready():
@@ -156,7 +160,23 @@ async def change_prefix(ctx, *, newPrefix):
         except:        
             await ctx.send(embed=discord.Embed(title="Invalid Prefix", description=("Prefix could not be changed.")))
         else:
-            await ctx.send(embed=discord.Embed(title="Prefix Changed", description=("The prefix has successfully been changed to {prefix}".format(prefix=newPrefix))))   
+            await ctx.send(embed=discord.Embed(title="Prefix Changed", description=("The prefix has successfully been changed to {prefix}".format(prefix=newPrefix))))
+            
+# Change prefix                
+@bot.command(name='help')
+async def help(ctx):  
+    await ctx.send(embed=discord.Embed(title="Command List", description="While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! \n **g!addword:** Add a word to the list of banned words.\n **g!removeword:** Remove a word from the list of banned words.\n **g!responsechannel:** Set the channel for ban responses.\n **g!listwords:** List the banned words.\n **g!prefix:** Change the bot prefix.\n **g!togglepunish:** Toggles punishment between ban and kick (defualt ban)")) 
 
-    
+# Toggle punishment                
+@bot.command(name='togglepunish')
+@is_admin()
+async def toggle_punish(ctx):
+    global punishMode
+    if punishMode == "ban":
+        punishMode = "kick"
+        await ctx.send(embed=discord.Embed(title="Punishment Toggled", description="Users who say a banned word will now be kicked."))
+    elif punishMode == "kick":
+        punishMode = "ban"
+        await ctx.send(embed=discord.Embed(title="Punishment Toggled", description="Users who say a banned word will now be banned."))
+   
 bot.run(TOKEN)
