@@ -6,8 +6,6 @@ An auto-moderation bot.
 @author: Fraser
 '''
 from discord.ext import commands
-import traceback
-import sys
 import discord
 import os
 from dotenv import load_dotenv
@@ -162,8 +160,7 @@ async def list_words(ctx):
 @commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def change_prefix(ctx, *, newPrefix):  
     '''Change the bot prefix.'''
-    
-    
+     
     await ctx.message.delete() 
     newPrefix = newPrefix.strip()
     if newPrefix != "":
@@ -193,7 +190,6 @@ async def set_punishment(ctx, *, newPunish):
     else:
         await ctx.send(embed=discord.Embed(title="Input Not Recognised", description="That input didn't match one of the punishment options. Please recall the command with either ban, kick or warn."))
  
-
 @bot.command(name="help", hidden=True)
 async def help(ctx, commandName=""):
     '''Returns all commands available'''
@@ -209,7 +205,6 @@ async def help(ctx, commandName=""):
                 helptext += f"**`{command}`:** {command.help}\n"
     await ctx.send(embed=discord.Embed(title="Help", description= f"{helptext}"))
                 
-    
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
