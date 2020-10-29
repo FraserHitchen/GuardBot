@@ -208,11 +208,8 @@ async def help(ctx, commandName=""):
         
     else:
         for command in bot.commands:
-            print(command.name)
             if command.name == commandName:
-                print("made it")
                 helptext += f"**`{command}`:** {command.help}\n"
-                print(helptext)
     await ctx.send(embed=discord.Embed(title="Help", description= f"{helptext}"))
                 
     
