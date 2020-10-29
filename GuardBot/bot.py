@@ -13,14 +13,12 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix='g!', intents=intents)
 bot.remove_command('help')
 
-
-
+# Get banned words into a list
 bannedWords = []
 file = open("Banned-Words.txt", "r")
 for word in file:
@@ -31,16 +29,19 @@ file.close()
 outChannel = None
 punishMode = "ban"
 
+# check if user using command is an admin
 def is_admin():
     def predicate(ctx):
         channel = ctx.channel
         return ctx.author.permissions_in(channel).administrator
     return commands.check(predicate)
 
+# check if message is in a private chat
 def is_dm(message):
     def predicate(ctx):
         return str(ctx.channel.type) == "private"
 
+# ban user for a specified message
 async def banUserForMessage(message):
     user = message.author
     guild = message.channel.guild
@@ -52,8 +53,10 @@ async def banUserForMessage(message):
     elif punishMode == "kick":
         punishment = "kicked"
         #await guild.kick(user, reason="Offensive Language")
+    elif punishMode == "warn":
+        punishment = "warned"
     await outChannel.send(embed=discord.Embed(title="User {punishCap}".format(punishCap=punishment.capitalize()), description = "User {user} has been {punishment} for the following message: {content}".format(user=user, punishment=punishment, content=message.content)))
-    sent = await user.send(embed=discord.Embed(title="Banned", description=("You have been {punishment} from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explanation within 5 minutes.".format(punishment=punishment, guild=message.channel.guild.name, message = message.content))))
+    sent = await user.send(embed=discord.Embed(title="{punishCap}".format(punishCap=punishment.capitalize()), description=("You have been {punishment} from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explanation within 5 minutes.".format(punishment=punishment, guild=message.channel.guild.name, message = message.content))))
     
     def check(message):
         return message.channel == sent.channel
@@ -61,6 +64,7 @@ async def banUserForMessage(message):
     response = await bot.wait_for('message', check=check, timeout=300)
     await outChannel.send(embed=discord.Embed(title="Banned User Response", description = "{punishCap} user {user} has given this explaination for why their ban/kick was invalid: {response}".format(punishCap=punishment.capitalize(), user=user, response=response.content)))
 
+# Code to run on bot startup
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
@@ -190,23 +194,21 @@ async def help(ctx):
     await ctx.send(embed=discord.Embed(title="Command List", description="While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! \n **g!addword:** Add a word to the list of banned words.\n **g!removeword:** Remove a word from the list of banned words.\n **g!outputchannel:** Set the channel for bot outputs.\n **g!listwords:** List the banned words.\n **g!prefix:** Change the bot prefix.\n **g!togglepunish:** Toggles punishment between ban and kick (defualt ban)")) 
 
 # Toggle punishment                
-@bot.command(name='togglepunish')
+@bot.command(name='punishment')
 @is_admin()
-async def toggle_punish(ctx):
+async def set_punishment(ctx, *, newPunish):
     await ctx.message.delete() 
     global punishMode
-    if punishMode == "ban":
-        punishMode = "kick"
-        await ctx.send(embed=discord.Embed(title="Punishment Toggled", description="Users who say a banned word will now be kicked."))
-    elif punishMode == "kick":
+    if newPunish == "ban":
         punishMode = "ban"
-        await ctx.send(embed=discord.Embed(title="Punishment Toggled", description="Users who say a banned word will now be banned."))
-        
-# Toggle punishment                
-@bot.command(name='avtest')
-@is_admin()
-async def avrae_test(ctx):
-    await ctx.message.delete() 
-    await ctx.send("!init begin")
+        await ctx.send(embed=discord.Embed(title="Punishment Changed", description="Users who say a banned word will now be banned."))
+    elif newPunish == "kick":
+        punishMode = "kick"
+        await ctx.send(embed=discord.Embed(title="Punishment Changed", description="Users who say a banned word will now be kicked."))
+    elif newPunish == "warn":
+        punishMode = "warn"
+        await ctx.send(embed=discord.Embed(title="Punishment Changed", description="Users who say a banned word will now be warned."))
+    else:
+        await ctx.send(embed=discord.Embed(title="Input Not Recognised", description="That input didn't match one of the punishment options. Please recall the command with either ban, kick or warn."))
    
 bot.run(TOKEN)
