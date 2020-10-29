@@ -55,14 +55,15 @@ async def banUserForMessage(message):
         #await guild.kick(user, reason="Offensive Language")
     elif punishMode == "warn":
         punishment = "warned"
-    await outChannel.send(embed=discord.Embed(title="User {punishCap}".format(punishCap=punishment.capitalize()), description = "User {user} has been {punishment} for the following message: {content}".format(user=user, punishment=punishment, content=message.content)))
-    sent = await user.send(embed=discord.Embed(title="{punishCap}".format(punishCap=punishment.capitalize()), description=("You have been {punishment} from {guild} due to the message \"{message}\". If you think this was a mistake reply to this message with your explanation within 5 minutes.".format(punishment=punishment, guild=message.channel.guild.name, message = message.content))))
+    punishCap = punishment.capitalize()
+    await outChannel.send(embed=discord.Embed(title=f"User {punishCap}", description = f"User {user} has been {punishment} for the following message: {message.content}"))
+    sent = await user.send(embed=discord.Embed(title=f"{punishCap}", description=(f"You have been {punishment} from {guild} due to the message \"{message.content}\". If you think this was a mistake reply to this message with your explanation within 5 minutes.")))
     
     def check(message):
         return message.channel == sent.channel
     
     response = await bot.wait_for('message', check=check, timeout=300)
-    await outChannel.send(embed=discord.Embed(title="Banned User Response", description = "{punishCap} user {user} has given this explaination for why their ban/kick was invalid: {response}".format(punishCap=punishment.capitalize(), user=user, response=response.content)))
+    await outChannel.send(embed=discord.Embed(title="Banned User Response", description = f"{punishCap} user {user} has given this explanation for why their ban/kick was invalid: {response.content}"))
 
 # Code to run on bot startup
 @bot.event
@@ -89,6 +90,7 @@ async def on_message(message):
 @bot.command(name='addword')
 @is_admin()
 async def add_word(ctx, *, newWord):
+    '''Add a word to the list of banned words.'''
     
     await ctx.message.delete()
     
@@ -109,10 +111,11 @@ async def add_word(ctx, *, newWord):
         await ctx.send(embed=discord.Embed(title="Word Added", description=("The word was successfully added to the list of banned words.")))
         
 
-# Remove word from banned list        
+     
 @bot.command(name='removeword')
 @is_admin()
 async def remove_word(ctx, *, newWord):
+    '''Remove a word from the list of banned words.'''
     
     await ctx.message.delete()
     
@@ -136,11 +139,12 @@ async def remove_word(ctx, *, newWord):
             return
         
     await ctx.send(embed=discord.Embed(title="Cannot Find Word", description=("This word could not be found in the list of banned words.")))
-
-# Set Output Channel    
+  
 @bot.command(name='outputchannel')
 @is_admin()
 async def output_channel(ctx, *, newChannel):  
+    '''Set the channel for bot output.'''
+    
     global outChannel
     await ctx.message.delete()
     try: 
@@ -150,11 +154,12 @@ async def output_channel(ctx, *, newChannel):
         await ctx.send(embed=discord.Embed(title="Output Channel Change Unsuccessful", description=("The given channel was not valid.")))
     else:
         await ctx.send(embed=discord.Embed(title="Output Channel Changed", description=("The output channel was successfully changed.")))
-
-# List banned words        
+      
 @bot.command(name='listwords')
 @is_admin()
 async def list_words(ctx): 
+    '''List the banned words.'''
+    
     await ctx.message.delete() 
     
     def check(user):
@@ -173,11 +178,13 @@ async def list_words(ctx):
     elif reply.content == "no":
         await botMsg.delete()
         await reply.delete()   
-    
-# Change prefix                
+                  
 @bot.command(name='prefix')
 @is_admin()
 async def change_prefix(ctx, *, newPrefix):  
+    '''Change the bot prefix.'''
+    
+    
     await ctx.message.delete() 
     newPrefix = newPrefix.strip()
     if newPrefix != "":
@@ -187,16 +194,12 @@ async def change_prefix(ctx, *, newPrefix):
             await ctx.send(embed=discord.Embed(title="Invalid Prefix", description=("Prefix could not be changed.")))
         else:
             await ctx.send(embed=discord.Embed(title="Prefix Changed", description=("The prefix has successfully been changed to {prefix}".format(prefix=newPrefix))))
-            
-# Change prefix                
-@bot.command(name='help')
-async def help(ctx):  
-    await ctx.send(embed=discord.Embed(title="Command List", description="While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! \n **g!addword:** Add a word to the list of banned words.\n **g!removeword:** Remove a word from the list of banned words.\n **g!outputchannel:** Set the channel for bot outputs.\n **g!listwords:** List the banned words.\n **g!prefix:** Change the bot prefix.\n **g!punishment:** Set the punishment (ban, kick or warn).")) 
-
-# Toggle punishment                
+                         
 @bot.command(name='punishment')
 @is_admin()
-async def set_punishment(ctx, *, newPunish):
+async def set_punishment(ctx, *, newPunish):   
+    '''Set the punishment (ban, kick or warn). Default is ban.'''
+      
     await ctx.message.delete() 
     global punishMode
     if newPunish == "ban":
@@ -210,5 +213,15 @@ async def set_punishment(ctx, *, newPunish):
         await ctx.send(embed=discord.Embed(title="Punishment Changed", description="Users who say a banned word will now be warned."))
     else:
         await ctx.send(embed=discord.Embed(title="Input Not Recognised", description="That input didn't match one of the punishment options. Please recall the command with either ban, kick or warn."))
-   
+ 
+
+@bot.command(name="help", hidden=True)
+async def help(ctx):
+    '''Returns all commands available'''
+    
+    helptext = "While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!outputchannel first! \n\n"
+    for command in bot.commands:
+        helptext += f"**`{command}`:** {command.help}\n" 
+    await ctx.send(embed=discord.Embed(title="Help", description= f"{helptext}"))
+    
 bot.run(TOKEN)
