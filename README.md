@@ -13,4 +13,4 @@ While online the bot will automatically remove banned words and ban the users wh
 
 **g!prefix [prefix]:** Change the bot prefix.
 
-**g!punishment:** Set the punishment (ban, kick or warn). Default is ban.
+**g!punishment [ban/kick/warn]:** Set the punishment (ban, kick or warn). Default is ban.

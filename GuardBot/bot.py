@@ -6,9 +6,9 @@ An auto-moderation bot.
 @author: Fraser
 '''
 from discord.ext import commands
+import traceback
+import sys
 import discord
-import numpy as np
-import asyncio
 import os
 from dotenv import load_dotenv
 
@@ -28,21 +28,9 @@ file.close()
 
 outChannel = None
 punishMode = "ban"
-
-# check if user using command is an admin
-def is_admin():
-    def predicate(ctx):
-        channel = ctx.channel
-        return ctx.author.permissions_in(channel).administrator
-    return commands.check(predicate)
-
-# check if message is in a private chat
-def is_dm(message):
-    def predicate(ctx):
-        return str(ctx.channel.type) == "private"
-
-# ban user for a specified message
+    
 async def banUserForMessage(message):
+    '''Punish user for a specified message'''
     user = message.author
     guild = message.channel.guild
     
@@ -65,16 +53,15 @@ async def banUserForMessage(message):
     response = await bot.wait_for('message', check=check, timeout=300)
     await outChannel.send(embed=discord.Embed(title="Banned User Response", description = f"{punishCap} user {user} has given this explanation for why their ban/kick was invalid: {response.content}"))
 
-# Code to run on bot startup
 @bot.event
 async def on_ready():
+    '''Code to run on bot startup'''
     print(f'{bot.user} has connected to Discord!')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="the streets of Erilea"))
 
-# Check for banned words
 @bot.event
 async def on_message(message):
-    
+    '''Check for banned words'''
     if message.author != bot.user and message.content[:2] != "g!" and str(message.channel.type) != "private" :
         channel = message.channel
         contentStr = message.content
@@ -85,10 +72,9 @@ async def on_message(message):
                 await channel.send(embed=discord.Embed(title="Stop Right There, Criminal Scum!", description=("{user}'s message contained a banned word and has been deleted.".format(user=message.author.name))))              
                 await banUserForMessage(message)
     await bot.process_commands(message)  
-
-# Add word to banned list          
+         
 @bot.command(name='addword')
-@is_admin()
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def add_word(ctx, *, newWord):
     '''Add a word to the list of banned words.'''
     
@@ -110,10 +96,8 @@ async def add_word(ctx, *, newWord):
         file.close()
         await ctx.send(embed=discord.Embed(title="Word Added", description=("The word was successfully added to the list of banned words.")))
         
-
-     
 @bot.command(name='removeword')
-@is_admin()
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def remove_word(ctx, *, newWord):
     '''Remove a word from the list of banned words.'''
     
@@ -130,7 +114,6 @@ async def remove_word(ctx, *, newWord):
             
             file = open("Banned-Words.txt", "w")
             for line in lines:
-                print(line)
                 if line.strip("\n") != newWord:
                     file.write(line.strip("\n")+"\n")
             file.close()
@@ -141,22 +124,18 @@ async def remove_word(ctx, *, newWord):
     await ctx.send(embed=discord.Embed(title="Cannot Find Word", description=("This word could not be found in the list of banned words.")))
   
 @bot.command(name='outputchannel')
-@is_admin()
-async def output_channel(ctx, *, newChannel):  
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
+async def output_channel(ctx, *, newChannel: discord.TextChannel):  
     '''Set the channel for bot output.'''
     
     global outChannel
     await ctx.message.delete()
-    try: 
-        newChannel = int(newChannel[2:-1]) 
-        outChannel = bot.get_channel(newChannel)
-    except:
-        await ctx.send(embed=discord.Embed(title="Output Channel Change Unsuccessful", description=("The given channel was not valid.")))
-    else:
-        await ctx.send(embed=discord.Embed(title="Output Channel Changed", description=("The output channel was successfully changed.")))
-      
+    
+    outChannel = newChannel
+    await ctx.send(embed=discord.Embed(title="Output Channel Changed", description=("The output channel was successfully changed.")))
+        
 @bot.command(name='listwords')
-@is_admin()
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def list_words(ctx): 
     '''List the banned words.'''
     
@@ -180,7 +159,7 @@ async def list_words(ctx):
         await reply.delete()   
                   
 @bot.command(name='prefix')
-@is_admin()
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def change_prefix(ctx, *, newPrefix):  
     '''Change the bot prefix.'''
     
@@ -196,7 +175,7 @@ async def change_prefix(ctx, *, newPrefix):
             await ctx.send(embed=discord.Embed(title="Prefix Changed", description=("The prefix has successfully been changed to {prefix}".format(prefix=newPrefix))))
                          
 @bot.command(name='punishment')
-@is_admin()
+@commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def set_punishment(ctx, *, newPunish):   
     '''Set the punishment (ban, kick or warn). Default is ban.'''
       
@@ -216,12 +195,28 @@ async def set_punishment(ctx, *, newPunish):
  
 
 @bot.command(name="help", hidden=True)
-async def help(ctx):
+async def help(ctx, commandName=""):
     '''Returns all commands available'''
-    
-    helptext = "While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!outputchannel first! \n\n"
-    for command in bot.commands:
-        helptext += f"**`{command}`:** {command.help}\n" 
+    helptext = ""
+    if commandName == "":
+        helptext += "While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!outputchannel first! \n\n"
+        for command in bot.commands:
+            helptext += f"**`{command}`:** {command.help}\n" 
+        
+    else:
+        for command in bot.commands:
+            if command.name == commandName:
+                helptext += f"**`{command}`:** {command.help}\n"
     await ctx.send(embed=discord.Embed(title="Help", description= f"{helptext}"))
+                
     
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.errors.MissingRequiredArgument):
+        await ctx.send(embed=discord.Embed(title="Error: Missing Argument", description="You seem to be missing the required argument for this command."))
+    elif isinstance(error, commands.errors.CheckAnyFailure):
+        await ctx.send(embed=discord.Embed(title="Error: No Permission", description="You do not have the required permissions to run this command."))
+    elif isinstance(error, commands.errors.ChannelNotFound):
+        await ctx.send(embed=discord.Embed(title="Error: Invalid Channel", description=("The given channel could not be found.")))
+        
 bot.run(TOKEN)
