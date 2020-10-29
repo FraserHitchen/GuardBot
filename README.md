@@ -1,5 +1,7 @@
 # GuardBot
-While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! 
+While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!outputchannel first! 
+
+**g!help:** Returns help for all commands.
 
 **g!addword [word]:** Add a word to the list of banned words.
 
