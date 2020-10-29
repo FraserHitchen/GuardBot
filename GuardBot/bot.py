@@ -191,7 +191,7 @@ async def change_prefix(ctx, *, newPrefix):
 # Change prefix                
 @bot.command(name='help')
 async def help(ctx):  
-    await ctx.send(embed=discord.Embed(title="Command List", description="While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! \n **g!addword:** Add a word to the list of banned words.\n **g!removeword:** Remove a word from the list of banned words.\n **g!outputchannel:** Set the channel for bot outputs.\n **g!listwords:** List the banned words.\n **g!prefix:** Change the bot prefix.\n **g!togglepunish:** Toggles punishment between ban and kick (defualt ban)")) 
+    await ctx.send(embed=discord.Embed(title="Command List", description="While online the bot will automatically remove banned words and ban the users who write them. Make sure to run g!responsechannel first! \n **g!addword:** Add a word to the list of banned words.\n **g!removeword:** Remove a word from the list of banned words.\n **g!outputchannel:** Set the channel for bot outputs.\n **g!listwords:** List the banned words.\n **g!prefix:** Change the bot prefix.\n **g!punishment:** Set the punishment (ban, kick or warn).")) 
 
 # Toggle punishment                
 @bot.command(name='punishment')
