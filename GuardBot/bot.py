@@ -72,8 +72,7 @@ async def on_message(message):
                 await channel.send(embed=discord.Embed(title="Stop Right There, Criminal Scum!", description=("{user}'s message contained a banned word and has been deleted.".format(user=message.author.name))))              
                 await banUserForMessage(message)
     await bot.process_commands(message)  
-
-# Add word to banned list          
+         
 @bot.command(name='addword')
 @commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def add_word(ctx, *, newWord):
@@ -97,8 +96,6 @@ async def add_word(ctx, *, newWord):
         file.close()
         await ctx.send(embed=discord.Embed(title="Word Added", description=("The word was successfully added to the list of banned words.")))
         
-
-     
 @bot.command(name='removeword')
 @commands.check_any(commands.has_permissions(administrator=True), commands.is_owner(), commands.has_role("Bot Team"))
 async def remove_word(ctx, *, newWord):
